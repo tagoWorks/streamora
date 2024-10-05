@@ -23,6 +23,7 @@ export default function Signup() {
   });
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
   const passwordRef = useRef(null);
+  const [isVerified, setIsVerified] = useState(false);
 
   const searchParams = useSearchParams();
 
@@ -59,6 +60,33 @@ export default function Signup() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    let intervalId;
+
+    const checkVerification = () => {
+      const user = auth.currentUser;
+      if (user) {
+        user.reload().then(() => {
+          if (user.emailVerified) {
+            setIsVerified(true);
+            clearInterval(intervalId);
+            window.location.href = '/';
+          }
+        });
+      }
+    };
+
+    if (verificationSent) {
+      intervalId = setInterval(checkVerification, 5000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [verificationSent]);
 
   const checkPasswordStrength = (password) => {
     setPasswordStrength({
@@ -129,6 +157,7 @@ export default function Signup() {
             <h2 className="text-2xl sm:text-3xl font-bold text-white">Verification Sent</h2>
             <p className="mt-2 text-sm sm:text-base text-gray-400">A verification email has been sent to your email address. To prevent fake accounts and data wastage, Streamora requires all users to verify their email address.</p>
             <p className="mt-2 text-sm sm:text-base text-gray-400">Please check your inbox and click the verification link to use Streamora.</p>
+            {isVerified && <p className="mt-2 text-sm sm:text-base text-green-500">Email verified! Redirecting to home page...</p>}
           </div>
         ) : (
           <>

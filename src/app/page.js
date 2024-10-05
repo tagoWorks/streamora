@@ -3,13 +3,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Search, X,Library, PlusCircle, 
-  Play, Pause, SkipBack, 
-  SkipForward, Volume, Volume1, 
-  Volume2, VolumeX, List, 
-  Heart, LogOut, MoreVertical, 
-  Plus, User, Compass, Trash2, 
-  Edit, Shuffle, Trash, Menu, 
-  Radio, GripVertical, ChevronDown 
+  Play, Pause, SkipBack, SkipForward, 
+  Volume, Volume1, Volume2, VolumeX, 
+  List, Heart, LogOut, MoreVertical, 
+  Plus, User, Compass, Trash2, Edit, 
+  Shuffle, Trash, Menu, Radio, GripVertical, 
+  ChevronDown 
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -50,10 +49,12 @@ import { NavigationMenuLink } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
 import { db } from '../firebase/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+
 const YouTubePlayer = dynamic(() => import('../components/YouTubePlayer'), { ssr: false });
 const LdrsComponents = dynamic(() => import('../components/LdrsComponents'), { ssr: false });
 const ClientOnlyBouncy = dynamic(() => import('../components/ClientOnlyBouncy'), { ssr: false });
 const ClientOnlyWobble = dynamic(() => import('../components/ClientOnlyWobble'), { ssr: false });
+
 let exploreCache = null;
 let podcastCache = null;
 let lastExploreCacheTime = 0;
@@ -63,7 +64,6 @@ const isCacheValid = (lastCacheTime, interval) => {
   const now = Date.now();
   return lastCacheTime > 0 && (now - lastCacheTime) < interval;
 };
-
 const PODCAST_CACHE_INTERVAL = 600000; // 10 minutes
 
 const sanitizePlaylistName = (name) => {
@@ -132,13 +132,14 @@ export default function HomePage() {
   const [livePodcasts, setLivePodcasts] = useState([]);
   const [podcastGenres, setPodcastGenres] = useState([]);
   const [podcastResults, setPodcastResults] = useState([]);
-  const [lastTrendingCacheTime, setLastTrendingCacheTime] = useState(0);
   const [isPodcastSearching, setIsPodcastSearching] = useState(false);
   const [selectedPodcastCategory, setSelectedPodcastCategory] = useState(null);
   const [isLiveVideo, setIsLiveVideo] = useState(false);
   const [liveListeningTime, setLiveListeningTime] = useState(0);
   const liveListeningIntervalRef = useRef(null);
+
   const [trendingMusic, setTrendingMusic] = useState([]);
+  const [lastTrendingCacheTime, setLastTrendingCacheTime] = useState(0);
 
   const shuffleArray = useCallback((array) => {
     const newArray = [...array];
@@ -1466,7 +1467,7 @@ export default function HomePage() {
             ) : (
               <>
                 <Link href="/login" className="text-sm text-white hover:text-gray-300 transition-colors duration-200">
-                  Sign in
+                  Sign In
                 </Link>
                 <div className="h-4 w-px bg-white"></div>
                 <Link href="/signup" className="text-sm text-white hover:text-gray-300 transition-colors duration-200">
@@ -1953,7 +1954,7 @@ export default function HomePage() {
                   ) : (
                     <div className="flex items-center">
                       <Link href="/login" className="text-sm text-white hover:text-gray-300 transition-colors duration-200 px-2 py-1">
-                        Sign in
+                        Sign In
                       </Link>
                       <div className="h-4 w-px bg-gray-600 mx-1"></div>
                       <Link href="/signup" className="text-sm text-white hover:text-gray-300 transition-colors duration-200 px-2 py-1">
@@ -2365,17 +2366,17 @@ export default function HomePage() {
                     initial={{ scale: 0.9 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0.9 }}
-                    className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4"
+                    className="bg-gray-800 p-6 rounded-lg max-w-md mx-4"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <h2 className="text-2xl font-bold mb-4">Login Required</h2>
-                    <p className="mb-6">Please log in to your account or create a new account to access this feature.</p>
+                    <h2 className="text-2xl font-bold mb-4">You need an account for this.</h2>
+                    <p className="mb-6">This feature most likely stores data to a database, you will need an account to use it.</p>
                     <div className="flex justify-end space-x-4">
                       <Link href="/login" className="px-4 py-2 bg-white text-black rounded hover:bg-gray-300 transition-colors">
-                        Log In
+                        Sign In
                       </Link>
                       <Link href="/signup" className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
-                        Sign Up
+                        Create an Account
                       </Link>
                     </div>
                   </motion.div>

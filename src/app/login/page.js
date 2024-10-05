@@ -52,7 +52,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md p-6 sm:p-8 space-y-6 sm:space-y-8 bg-gray-800 rounded-xl shadow-2xl">
         <div className="text-center">
           <h1 className="text-2xl sm:text-3xl font-bold text-white">Welcome back</h1>
-          <p className="mt-2 text-sm sm:text-base text-gray-400">Log in to your Streamora account</p>
+          <p className="mt-2 text-sm sm:text-base text-gray-400">Sign into Streamora to access your playlists, liked tracks, and more.</p>
         </div>
         <form onSubmit={handleLogin} className="space-y-4 sm:space-y-6">
           <div>
@@ -79,7 +79,7 @@ export default function LoginPage() {
           </div>
           <div>
             <button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm sm:text-base font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-              Log In
+              Sign In
             </button>
           </div>
         </form>

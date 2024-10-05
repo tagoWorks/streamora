@@ -1,8 +1,9 @@
 'use client'
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { doCreateUserWithEmailAndPassword, doSignInWithGoogle, doSendEmailVerification } from '@/firebase/auth';
-import { updateProfile } from 'firebase/auth';
+import { updateProfile, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '@/firebase/firebase';
 import { doc, setDoc } from "firebase/firestore";
@@ -22,7 +23,15 @@ export default function Signup() {
   });
   const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
   const passwordRef = useRef(null);
-  const [debugMode, setDebugMode] = useState(false);
+
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const alertParam = searchParams.get('alert');
+    if (alertParam === 'verify') {
+      setVerificationSent(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -48,21 +57,6 @@ export default function Signup() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleKeyPress = (event) => {
-      if (event.key === 'F4') {
-        setDebugMode(true);
-        setVerificationSent(true);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyPress);
     };
   }, []);
 
@@ -101,7 +95,8 @@ export default function Signup() {
         createdAt: new Date()
       });
 
-      window.location.href = '/';
+      // Sign in the user after account creation
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       setError(error.message);
     }
@@ -117,17 +112,23 @@ export default function Signup() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      window.location.href = '/signup';
+    } catch (error) {
+      setError("Failed to log out. Please try again.");
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md p-6 sm:p-8 space-y-6 sm:space-y-8 bg-gray-800 rounded-xl shadow-2xl">
-        {(verificationSent || debugMode) ? (
+        {(verificationSent) ? (
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-white">Verification Sent</h2>
-            <p className="mt-2 text-sm sm:text-base text-gray-400">A verification email has been sent to your email address.</p>
-            <p className="mt-2 text-sm sm:text-base text-gray-400">Please check your inbox and click the verification link to log in to your account.</p>
-            {debugMode && (
-              <p className="mt-4 text-xs sm:text-sm text-yellow-300">Debug Mode: This message is shown due to F4 key press.</p>
-            )}
+            <p className="mt-2 text-sm sm:text-base text-gray-400">A verification email has been sent to your email address. To prevent fake accounts and data wastage, Streamora requires all users to verify their email address.</p>
+            <p className="mt-2 text-sm sm:text-base text-gray-400">Please check your inbox and click the verification link to use Streamora.</p>
           </div>
         ) : (
           <>
@@ -238,10 +239,10 @@ export default function Signup() {
           </>
         )}
         <p className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-400">
-          Already have an account?{' '}
-          <Link href="/login" className="font-medium text-purple-500 hover:text-purple-400">
-            Sign in
-          </Link>
+          Having issues?{' '}
+          <button onClick={handleLogout} className="font-medium text-purple-500 hover:text-purple-400">
+            Log out
+          </button>
         </p>
       </div>
     </div>

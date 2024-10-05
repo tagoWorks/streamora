@@ -45,10 +45,13 @@ import {
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { NavigationMenuLink } from "@/components/ui/navigation-menu"
+import {
+  NavigationMenuLink,
+} from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
 import { db } from '../firebase/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
 
 const YouTubePlayer = dynamic(() => import('../components/YouTubePlayer'), { ssr: false });
 const LdrsComponents = dynamic(() => import('../components/LdrsComponents'), { ssr: false });
@@ -64,7 +67,7 @@ const isCacheValid = (lastCacheTime, interval) => {
   const now = Date.now();
   return lastCacheTime > 0 && (now - lastCacheTime) < interval;
 };
-const PODCAST_CACHE_INTERVAL = 600000; // 10 minutes
+const PODCAST_CACHE_INTERVAL = 600000; 
 
 const sanitizePlaylistName = (name) => {
   const sanitized = name.replace(/[^a-zA-Z0-9 ]/g, '');
@@ -140,6 +143,17 @@ export default function HomePage() {
 
   const [trendingMusic, setTrendingMusic] = useState([]);
   const [lastTrendingCacheTime, setLastTrendingCacheTime] = useState(0);
+
+  // Add this new state to track if we should ignore the next click
+  const [ignoreNextClick, setIgnoreNextClick] = useState(false);
+
+  // Add this new function to handle clicks on the main content
+  const handleContentClick = useCallback(() => {
+    if (!ignoreNextClick && showQueue) {
+      setShowQueue(false);
+    }
+    setIgnoreNextClick(false);
+  }, [ignoreNextClick, showQueue]);
 
   const shuffleArray = useCallback((array) => {
     const newArray = [...array];
@@ -253,6 +267,8 @@ export default function HomePage() {
     return false;
   };
 
+  const router = useRouter();
+
   // Update the useEffect for initial data loading
   useEffect(() => {
     const loadInitialData = async () => {
@@ -274,6 +290,14 @@ export default function HomePage() {
         // Load user data if logged in
         if (user) {
           console.log("User is logged in, fetching data...");
+          
+          // Check if the user's email is verified
+          if (!user.emailVerified) {
+            console.log("User's email is not verified, redirecting...");
+            router.push('/signup?alert=verify');
+            return;
+          }
+
           const userDocRef = doc(db, 'users', user.uid);
           const userDocSnap = await getDoc(userDocRef);
 
@@ -336,7 +360,7 @@ export default function HomePage() {
     };
 
     loadInitialData();
-  }, [user, fetchAndCacheExploreData, refreshCache]);
+  }, [user, fetchAndCacheExploreData, refreshCache, router]);
 
   // Update Firestore whenever playlists changes
   useEffect(() => {
@@ -862,11 +886,13 @@ export default function HomePage() {
     }
   };
 
-  const handleQueueClick = () => {
+  const handleQueueClick = (e) => {
     if (!user) {
       setShowLoginAlert(true);
     } else {
+      e.stopPropagation(); // Prevent the click from immediately closing the queue
       setShowQueue(!showQueue);
+      setIgnoreNextClick(true); // Set this to true to ignore the next click
     }
   };
 
@@ -1392,6 +1418,7 @@ export default function HomePage() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
         className="space-y-6 md:space-y-8"
+        onClick={handleContentClick} // Add this onClick handler
       >
         {/* Header with search bar and user info */}
         <motion.header
@@ -2084,6 +2111,7 @@ export default function HomePage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
                   className="fixed bottom-24 right-4 bg-gray-800 p-4 rounded-lg shadow-lg w-80 max-h-96 overflow-y-auto z-30"
+                  onClick={(e) => e.stopPropagation()} // Add this to prevent clicks inside the queue from closing it
                 >
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-bold">Queue</h3>

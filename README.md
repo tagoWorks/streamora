@@ -1,6 +1,6 @@
 # Streamora
 
-Streamora is a modern web application for streaming and watching content online. It provides a seamless experience for both content creators and viewers.
+Streamora is a modern web application for streaming and watching content online. It provides a seamless experience for both content creators and viewers. Play all your favorite music from YouTube. Want to listen to live podcasts? We have that too. On your phone, tablet, or computer, everyone is included.
 
 ## Table of Contents
 
@@ -52,26 +52,6 @@ To get started with Streamora, follow these steps:
 ![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=for-the-badge&logo=eslint&logoColor=white)
 ![Firebase](https://img.shields.io/badge/firebase-a08021?style=for-the-badge&logo=firebase&logoColor=ffcd34)
 
-## Main Components
-
-- `src/app/page.js`: The main home page component. This is a client-side rendered component that includes the main functionality of the app, such as search, playlist management, and music playback. It uses various React hooks like useState, useEffect, and useCallback for state management and side effects.
-
-- `src/app/layout.js`: The root layout component. This component wraps all pages and includes global styles, fonts, and the AuthWrapper component for authentication. It uses the Inter font from Google Fonts and sets up metadata for the app.
-
-- `src/app/login/page.js`: Login page component. This page handles user authentication, likely integrating with Firebase for Google sign-in. It probably includes a form for email/password login and buttons for social media login options.
-
-- `src/app/register/page.js`: Registration page component. This page allows new users to create an account. It likely includes a form for user details (name, email, password) and handles the registration process, possibly using Firebase Authentication.
-
-- `src/app/api/youtube-search/route.js`: API route for YouTube search. This serverless function handles YouTube search requests. It likely uses the YouTube Data API to fetch search results based on user queries, returning the data in a format suitable for the frontend to consume.
-
-- `src/components/AuthWrapper.js`: Authentication wrapper component. This component likely manages the global authentication state, providing login/logout functionality and user information to child components.
-
-- `src/components/YouTubePlayer.js`: YouTube player component. This is a dynamically imported component that integrates the YouTube iframe API for video playback within the app.
-
-- `src/firebase/auth.js`: Firebase authentication module. This file likely contains functions for handling user authentication, including sign-in, sign-out, and user state management using Firebase Authentication.
-
-- `src/firebase/firebase.js`: Firebase configuration module. This file initializes the Firebase app and exports instances of various Firebase services (Firestore, Auth) for use throughout the application.
-
 ## Scripts
 
 - `npm run dev`: Runs the development server
@@ -85,11 +65,7 @@ The project follows a Next.js 13 structure with the app router:
 
 ```
 streamora/
-├── .eslintrc.json
-├── .gitignore
-├── next
-├── LICENSE
-├── README.md
+├── tailwind.config.js
 ├── next-env.d.ts
 ├── next.config.mjs
 ├── jsconfig.json
@@ -131,10 +107,12 @@ streamora/
 │   │   └── utils.js
 │   ├── utils/
 │   │   └── cache.js
-└── tailwind.config.js
+├── .eslintrc.json
+├── .gitignore
+├── next
+├── README.md
+└── LICENSE
 ```
-
-## Contribute
 
 ## Contribute
 

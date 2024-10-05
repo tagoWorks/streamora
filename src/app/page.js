@@ -2489,7 +2489,7 @@ export default function HomePage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-xl font-bold">Are you sure you want to log out?</AlertDialogTitle>
                   <AlertDialogDescription className="text-gray-400">
-                    Your playlists and other cached data will be wiped from this device. You cannot recover them by logging back in.
+                    Your playlists and other data will remain saved in your account. You can log back in anytime to access them.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

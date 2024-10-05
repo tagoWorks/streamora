@@ -1,7 +1,16 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Search, Home as HomeIcon, Library, PlusCircle, Play, Pause, SkipBack, SkipForward, Volume, Volume1, Volume2, VolumeX, List, Heart, LogOut, MoreVertical, Plus, User, Compass, Trash2, Edit, Shuffle, Trash, Menu, Radio, GripVertical, ChevronDown } from 'lucide-react';
+import { 
+  Search, X,Library, PlusCircle, 
+  Play, Pause, SkipBack, 
+  SkipForward, Volume, Volume1, 
+  Volume2, VolumeX, List, 
+  Heart, LogOut, MoreVertical, 
+  Plus, User, Compass, Trash2, 
+  Edit, Shuffle, Trash, Menu, 
+  Radio, GripVertical, ChevronDown 
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -26,11 +35,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -40,47 +46,29 @@ import {
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { 
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu"
+import { NavigationMenuLink } from "@/components/ui/navigation-menu"
 import { cn } from "@/lib/utils"
 import { db } from '../firebase/firebase';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
-
-// Dynamically import YouTubePlayer with SSR disabled
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 const YouTubePlayer = dynamic(() => import('../components/YouTubePlayer'), { ssr: false });
-
 const LdrsComponents = dynamic(() => import('../components/LdrsComponents'), { ssr: false });
-
 const ClientOnlyBouncy = dynamic(() => import('../components/ClientOnlyBouncy'), { ssr: false });
 const ClientOnlyWobble = dynamic(() => import('../components/ClientOnlyWobble'), { ssr: false });
-
-// Add these variables outside of the component
 let exploreCache = null;
 let podcastCache = null;
 let lastExploreCacheTime = 0;
 let lastPodcastCacheTime = 0;
 
-// Update the isCacheValid function
 const isCacheValid = (lastCacheTime, interval) => {
   const now = Date.now();
   return lastCacheTime > 0 && (now - lastCacheTime) < interval;
 };
 
-// Add this constant for podcast cache interval (10 minutes)
-const PODCAST_CACHE_INTERVAL = 600000; // 10 minutes in milliseconds
+const PODCAST_CACHE_INTERVAL = 600000; // 10 minutes
 
 const sanitizePlaylistName = (name) => {
-  // Remove any characters that are not alphanumeric or spaces
   const sanitized = name.replace(/[^a-zA-Z0-9 ]/g, '');
-  // Trim whitespace from the beginning and end
   const trimmed = sanitized.trim();
-  // Ensure the name is between 1 and 50 characters
   return trimmed.slice(0, 50);
 };
 
@@ -100,9 +88,6 @@ const PlayingIcon = () => (
   </motion.div>
 );
 
-// Add this constant at the top of your file, outside of the component
-const TRENDING_CACHE_INTERVAL = 3600000; // 1 hour in milliseconds
-
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -114,22 +99,18 @@ export default function HomePage() {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(100);
   const [queue, setQueue] = useState([]);
-  const [player, setPlayer] = useState(null);
   const [showAdBlockerWarning, setShowAdBlockerWarning] = useState(false);
   const [recentlyPlayed, setRecentlyPlayed] = useState([]);
   const [popularGenres, setPopularGenres] = useState([]);
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const playerRef = useRef(null);
   const [sliderValue, setSliderValue] = useState(0);
-  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
-  const [contextMenuVideo, setContextMenuVideo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [playlists, setPlaylists] = useState([]);
   const [showCreatePlaylistDialog, setShowCreatePlaylistDialog] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [showQueue, setShowQueue] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [showSavedToBrowserAlert, setShowSavedToBrowserAlert] = useState(false);
   const [likedVideos, setLikedVideos] = useState([]);
   const [currentView, setCurrentView] = useState('explore');
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
@@ -143,15 +124,11 @@ export default function HomePage() {
   const [playlistToDelete, setPlaylistToDelete] = useState(null);
   const [isShuffleOn, setIsShuffleOn] = useState(false);
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
-  const [showNewAccountNotification, setShowNewAccountNotification] = useState(false);
-  const [shuffledMoods, setShuffledMoods] = useState([]);
-  const [shuffleInterval, setShuffleInterval] = useState(10000);
   const [miniPlayerHeight, setMiniPlayerHeight] = useState(0);
   const [selectedGenre, setSelectedGenre] = useState(null);
   const [selectedMood, setSelectedMood] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
-  const [recentPodcasts, setRecentPodcasts] = useState([]);
   const [livePodcasts, setLivePodcasts] = useState([]);
   const [podcastGenres, setPodcastGenres] = useState([]);
   const [podcastResults, setPodcastResults] = useState([]);
@@ -160,9 +137,7 @@ export default function HomePage() {
   const [isLiveVideo, setIsLiveVideo] = useState(false);
   const [liveListeningTime, setLiveListeningTime] = useState(0);
   const liveListeningIntervalRef = useRef(null);
-
   const [trendingMusic, setTrendingMusic] = useState([]);
-  const [lastTrendingCacheTime, setLastTrendingCacheTime] = useState(0);
 
   const shuffleArray = useCallback((array) => {
     const newArray = [...array];

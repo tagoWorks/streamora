@@ -110,8 +110,8 @@ export default function Signup() {
   const handleGoogleSignIn = async () => {
     try {
       await doSignInWithGoogle();
-      // Redirect to home page with newAccount flag
-      window.location.href = '/?newAccount=true';
+      // Redirect to home
+      window.location.href = '/';
     } catch (error) {
       setError(error.message);
     }

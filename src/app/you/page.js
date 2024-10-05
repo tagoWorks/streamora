@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { auth } from '@/firebase/firebase';
 import { doSignOut, doChangePassword, doChangeEmail } from '@/firebase/auth';
 import { motion } from 'framer-motion';
-import { User, LogOut, Edit, Key, Mail, Calendar, ArrowLeft, Trash2 } from 'lucide-react';
+import { User, LogOut, Edit, Key, Mail, Calendar, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { updateProfile } from "firebase/auth";
-import axios from 'axios';
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);

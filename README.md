@@ -7,12 +7,10 @@ Streamora is a modern web application for streaming and watching content online.
 - [Features](#features)
 - [Getting Started](#getting-started)
 - [Technologies Used](#technologies-used)
-- [Main Components](#main-components)
 - [Scripts](#scripts)
 - [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
+- [Contribute](#Contribute)
+- [License and Contact](#license-and-contact)
 
 ## Features
 
@@ -51,6 +49,9 @@ To get started with Streamora, follow these steps:
 ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=for-the-badge&logo=eslint&logoColor=white)
 ![Firebase](https://img.shields.io/badge/firebase-a08021?style=for-the-badge&logo=firebase&logoColor=ffcd34)
+![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
+
+
 
 ## Scripts
 

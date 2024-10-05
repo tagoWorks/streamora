@@ -1247,24 +1247,32 @@ export default function HomePage() {
     setIsShuffleOn(!isShuffleOn);
   };
 
-  const handlePlaylistTrackReorder = (playlistId, result) => {
+  const handlePlaylistTrackReorder = useCallback((playlistId, result) => {
     if (!result.destination) return;
 
     setPlaylists(prevPlaylists => {
       const updatedPlaylists = prevPlaylists.map(playlist => {
         if (playlist.id === playlistId) {
-          const tracks = Array.from(playlist.tracks);
-          const [reorderedItem] = tracks.splice(result.source.index, 1);
-          tracks.splice(result.destination.index, 0, reorderedItem);
-          return { ...playlist, tracks };
+          const newTracks = Array.from(playlist.tracks);
+          const [reorderedItem] = newTracks.splice(result.source.index, 1);
+          newTracks.splice(result.destination.index, 0, reorderedItem);
+          return { ...playlist, tracks: newTracks };
         }
         return playlist;
       });
 
-      updateUserData({ playlists: updatedPlaylists });
+      if (selectedPlaylist && selectedPlaylist.id === playlistId) {
+        const updatedSelectedPlaylist = updatedPlaylists.find(p => p.id === playlistId);
+        setSelectedPlaylist(updatedSelectedPlaylist);
+      }
+
+      if (user) {
+        updateUserData({ playlists: updatedPlaylists });
+      }
+
       return updatedPlaylists;
     });
-  };
+  }, [user, selectedPlaylist, updateUserData]);
 
   const renderPlaylistView = () => {
     if (!selectedPlaylist) return null;
@@ -1299,38 +1307,32 @@ export default function HomePage() {
         </div>
         {selectedPlaylist.tracks.length > 0 ? (
           <DragDropContext onDragEnd={(result) => handlePlaylistTrackReorder(selectedPlaylist.id, result)}>
-            <Droppable droppableId="playlist-tracks">
+            <Droppable droppableId={`playlist-${selectedPlaylist.id}`}>
               {(provided) => (
                 <ul {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
                   {selectedPlaylist.tracks.map((track, index) => (
-                    <Draggable key={track.id} draggableId={track.id} index={index}>
+                    <Draggable key={index} draggableId={`${selectedPlaylist.id}-${index}`} index={index}>
                       {(provided) => (
                         <li
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className="bg-gray-800 p-3 rounded-lg flex items-center justify-between hover:bg-gray-700 transition-colors"
+                          className="bg-gray-800 p-3 rounded-lg flex items-center space-x-3 hover:bg-gray-700 transition-colors"
                         >
-                          <div className="flex items-center space-x-4 flex-grow">
-                            <div className="flex-shrink-0">
-                              <Image
-                                src={track.thumbnail}
-                                alt={track.title}
-                                width={60}
-                                height={60}
-                                className="rounded"
-                              />
-                            </div>
-                            <div className="flex-grow min-w-0">
-                              <p className="font-medium text-white truncate">{track.title}</p>
-                              <p className="text-sm text-gray-400">{track.channelName}</p>
-                              <div className="flex items-center text-xs text-gray-500 mt-1">
-                                <span className="mr-2">{track.views}</span>
-                                {track.uploadedAt !== 'N/A' && <span>{track.uploadedAt}</span>}
-                              </div>
-                            </div>
+                          <div className="flex-shrink-0 w-12 h-12 relative">
+                            <Image
+                              src={track.thumbnail}
+                              alt={track.title}
+                              layout="fill"
+                              objectFit="cover"
+                              className="rounded"
+                            />
                           </div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex-grow min-w-0">
+                            <p className="font-medium text-white truncate">{track.title}</p>
+                            <p className="text-sm text-gray-400 truncate">{track.channelName}</p>
+                          </div>
+                          <div className="flex-shrink-0 flex items-center space-x-2">
                             <button
                               onClick={() => handleVideoSelect(track)}
                               className="text-white hover:text-green-500 transition-colors p-2"
@@ -1459,18 +1461,18 @@ export default function HomePage() {
                     onSelect={handleLogout}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    Logout
+                    Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <>
                 <Link href="/login" className="text-sm text-white hover:text-gray-300 transition-colors duration-200">
-                  Log in
+                  Sign in
                 </Link>
                 <div className="h-4 w-px bg-white"></div>
                 <Link href="/signup" className="text-sm text-white hover:text-gray-300 transition-colors duration-200">
-                  Sign up
+                  Create an Account
                 </Link>
               </>
             )}
@@ -1946,18 +1948,18 @@ export default function HomePage() {
                           onSelect={handleLogout}
                         >
                           <LogOut className="mr-2 h-4 w-4" />
-                          Logout
+                          Sign out
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
                     <div className="flex items-center">
                       <Link href="/login" className="text-sm text-white hover:text-gray-300 transition-colors duration-200 px-2 py-1">
-                        Log in
+                        Sign in
                       </Link>
                       <div className="h-4 w-px bg-gray-600 mx-1"></div>
                       <Link href="/signup" className="text-sm text-white hover:text-gray-300 transition-colors duration-200 px-2 py-1">
-                        Sign up
+                        Create an Account
                       </Link>
                     </div>
                   )}
@@ -2487,7 +2489,7 @@ export default function HomePage() {
             <AlertDialog open={showLogoutAlert} onOpenChange={setShowLogoutAlert}>
               <AlertDialogContent className="bg-gray-900 border border-gray-800 text-white">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-xl font-bold">Are you sure you want to log out?</AlertDialogTitle>
+                  <AlertDialogTitle className="text-xl font-bold">Are you sure you want to sign out?</AlertDialogTitle>
                   <AlertDialogDescription className="text-gray-400">
                     Your playlists and other data will remain saved in your account. You can log back in anytime to access them.
                   </AlertDialogDescription>
@@ -2500,7 +2502,7 @@ export default function HomePage() {
                     onClick={performLogout}
                     className="bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-400"
                   >
-                    Log out
+                    Sign me out
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

@@ -35,7 +35,6 @@ export default function ProfilePage() {
   const [showChangeEmailDialog, setShowChangeEmailDialog] = useState(false);
   const [error, setError] = useState('');
   const [showLogoutAlert, setShowLogoutAlert] = useState(false);
-  const [showDeleteAccountAlert, setShowDeleteAccountAlert] = useState(false);
 
   const handleGoBack = () => {
     window.location.href = '/';
@@ -114,10 +113,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handleRequestAccountDeletion = async () => {
-    setShowDeleteAccountAlert(true);
-  };
-
   const getProfileImageSrc = () => {
     if (user?.photoURL?.startsWith('https://lh3.googleusercontent.com')) {
       return user.photoURL;
@@ -178,7 +173,7 @@ export default function ProfilePage() {
                     className="flex items-center"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    Log Out
+                    Sign out
                   </Button>
                 </div>
               </div>
@@ -325,34 +320,14 @@ export default function ProfilePage() {
       <AlertDialog open={showLogoutAlert} onOpenChange={setShowLogoutAlert}>
         <AlertDialogContent className="bg-gray-800 text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you want to log out?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure you want to sign out?</AlertDialogTitle>
             <AlertDialogDescription>
               Your playlists and other data will remain saved in your account. You can log back in anytime to access them.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={performLogout} className="bg-red-600 text-white hover:bg-red-700">Log out</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Delete Account Alert Dialog */}
-      <AlertDialog open={showDeleteAccountAlert} onOpenChange={setShowDeleteAccountAlert}>
-        <AlertDialogContent className="bg-gray-800 text-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you want to delete your account?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. All your data, including playlists and preferences, will be permanently deleted. 
-              You will be logged out of your account and your account will be pending deletion for around 1 to 3 days. During this time 
-              you will be able to log in to your account, but the request will not be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={performAccountDeletion} className="bg-red-600 text-white hover:bg-red-700">
-              Request Account Deletion
-            </AlertDialogAction>
+            <AlertDialogAction onClick={performLogout} className="bg-red-600 text-white hover:bg-red-700">Sign me out</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

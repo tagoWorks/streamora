@@ -136,6 +136,6 @@ When submitting a pull request:
 If you're unsure about anything, don't hesitate to open an issue to discuss your ideas or ask questions. We appreciate all forms of contributions, from code to documentation improvements!
 
 # License and Contact
-This project is published under the [Apache License-2.0](./LICENSE)
+This project is published under the [Apache-2.0 License](./LICENSE)
 
 If you are interested in working together, or want to get in contact with me please email me at santiago@tago.works

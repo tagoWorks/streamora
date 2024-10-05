@@ -1,2 +1,162 @@
-# streamora
-Play all your favorite music from YouTube. Streamora allows you to play all your favorite music from YouTube without ads and in the background.
+# Streamora
+
+Streamora is a modern web application for streaming and watching content online. It provides a seamless experience for both content creators and viewers.
+
+## Table of Contents
+
+- [Features](#features)
+- [Getting Started](#getting-started)
+- [Technologies Used](#technologies-used)
+- [Main Components](#main-components)
+- [Scripts](#scripts)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+
+## Features
+
+- Modern React and Next.js 13 setup with App Router
+- Tailwind CSS for styling
+- ESLint for code linting
+- Authentication system using Google Firebase
+- Custom UI components
+
+## Getting Started
+
+To get started with Streamora, follow these steps:
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/tagoWorks/streamora.git
+   ```
+
+2. Install dependencies:
+   ```
+   cd streamora
+   npm install
+   ```
+
+3. Run the development server:
+   ```
+   npm run dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+
+## Technologies Used
+
+![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![ESLint](https://img.shields.io/badge/ESLint-4B3263?style=for-the-badge&logo=eslint&logoColor=white)
+![Firebase](https://img.shields.io/badge/firebase-a08021?style=for-the-badge&logo=firebase&logoColor=ffcd34)
+
+## Main Components
+
+- `src/app/page.js`: The main home page component. This is a client-side rendered component that includes the main functionality of the app, such as search, playlist management, and music playback. It uses various React hooks like useState, useEffect, and useCallback for state management and side effects.
+
+- `src/app/layout.js`: The root layout component. This component wraps all pages and includes global styles, fonts, and the AuthWrapper component for authentication. It uses the Inter font from Google Fonts and sets up metadata for the app.
+
+- `src/app/login/page.js`: Login page component. This page handles user authentication, likely integrating with Firebase for Google sign-in. It probably includes a form for email/password login and buttons for social media login options.
+
+- `src/app/register/page.js`: Registration page component. This page allows new users to create an account. It likely includes a form for user details (name, email, password) and handles the registration process, possibly using Firebase Authentication.
+
+- `src/app/api/youtube-search/route.js`: API route for YouTube search. This serverless function handles YouTube search requests. It likely uses the YouTube Data API to fetch search results based on user queries, returning the data in a format suitable for the frontend to consume.
+
+- `src/components/AuthWrapper.js`: Authentication wrapper component. This component likely manages the global authentication state, providing login/logout functionality and user information to child components.
+
+- `src/components/YouTubePlayer.js`: YouTube player component. This is a dynamically imported component that integrates the YouTube iframe API for video playback within the app.
+
+- `src/firebase/auth.js`: Firebase authentication module. This file likely contains functions for handling user authentication, including sign-in, sign-out, and user state management using Firebase Authentication.
+
+- `src/firebase/firebase.js`: Firebase configuration module. This file initializes the Firebase app and exports instances of various Firebase services (Firestore, Auth) for use throughout the application.
+
+## Scripts
+
+- `npm run dev`: Runs the development server
+- `npm run build`: Builds the application for production
+- `npm start`: Starts the production server
+- `npm run lint`: Runs ESLint to check for code issues
+
+## Project Structure
+
+The project follows a Next.js 13 structure with the app router:
+
+```
+streamora/
+├── .eslintrc.json
+├── .gitignore
+├── next
+├── LICENSE
+├── README.md
+├── next-env.d.ts
+├── next.config.mjs
+├── jsconfig.json
+├── components.json
+├── package.json
+├── postcss.config.js
+├── public/
+│   └── genre-images/
+│       ├── genre images...
+│   ├── avatar.png
+│   └── discover.svg
+├── src/
+│   ├── app/
+│   │   ├── login/
+│   │   │   └── page.js
+│   │   ├── register/
+│   │   │   └── page.js
+│   │   ├── you/
+│   │   │   └── page.js
+│   │   ├── api/
+│   │   │   └── youtube-search/
+│   │   │   │   └── route.js
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.js
+│   │   └── page.js
+│   ├── fonts/
+│   │   └── fonts...
+│   ├── components/
+│   │   ├── ui/
+│   │   │   └── various UI components...
+│   │   └── providers and wrappers...
+│   ├── firebase/
+│   │   └── auth.js
+│   │   └── firebase.js
+│   ├── hooks/
+│   │   └── useLocalStorage.js
+│   ├── lib/
+│   │   └── utils.js
+│   ├── utils/
+│   │   └── cache.js
+└── tailwind.config.js
+```
+
+## Contribute
+
+## Contribute
+
+Contributions to Streamora are welcome and appreciated! If you'd like to contribute, here's how you can get started:
+
+1. Fork the repository on GitHub.
+2. Clone your forked repository to your local machine.
+3. Create a new branch for your feature or bug fix.
+4. Make your changes and commit them with clear, descriptive commit messages.
+5. Push your changes to your fork on GitHub.
+6. Open a pull request from your fork to the main Streamora repository.
+
+When submitting a pull request:
+- Clearly describe the problem you're solving or the feature you're adding.
+- Include any relevant issue numbers.
+- Make sure your code follows the existing style of the project.
+- Write or update tests as necessary.
+- Ensure all tests pass before submitting.
+
+If you're unsure about anything, don't hesitate to open an issue to discuss your ideas or ask questions. We appreciate all forms of contributions, from code to documentation improvements!
+
+# License & Contact
+This project is published under the [Apache License 2.0](./LICENSE)
+
+If you are interested in working together, or want to get in contact with me please email me at santiago@tago.works

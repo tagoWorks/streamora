@@ -132,6 +132,7 @@ export default function HomePage() {
   const [livePodcasts, setLivePodcasts] = useState([]);
   const [podcastGenres, setPodcastGenres] = useState([]);
   const [podcastResults, setPodcastResults] = useState([]);
+  const [lastTrendingCacheTime, setLastTrendingCacheTime] = useState(0);
   const [isPodcastSearching, setIsPodcastSearching] = useState(false);
   const [selectedPodcastCategory, setSelectedPodcastCategory] = useState(null);
   const [isLiveVideo, setIsLiveVideo] = useState(false);

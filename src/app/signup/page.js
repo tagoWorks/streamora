@@ -1,21 +1,11 @@
 'use client'
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { doCreateUserWithEmailAndPassword, doSignInWithGoogle, doSendEmailVerification } from '@/firebase/auth';
 import { updateProfile } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '@/firebase/firebase';
 import { doc, setDoc } from "firebase/firestore";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 
 export default function Signup() {
   const [email, setEmail] = useState('');

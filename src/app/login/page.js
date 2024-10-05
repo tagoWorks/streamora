@@ -6,7 +6,6 @@ import { doSignInWithEmailAndPassword, doSignInWithGoogle } from '@/firebase/aut
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/firebase/firebase';
 import Link from 'next/link';
-import Image from 'next/image';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');

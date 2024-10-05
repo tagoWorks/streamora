@@ -1,6 +1,7 @@
 'use client'
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Search, Home as HomeIcon, Library, PlusCircle, Play, Pause, SkipBack, SkipForward, Volume, Volume1, Volume2, VolumeX, List, Heart, LogOut, LogIn, UserPlus, Trending, Clock, Users, X, MoreVertical, Settings, Plus, User, LibraryIcon, ChevronDown, Compass, Trash2, Edit, Shuffle, Trash, Menu, Radio } from 'lucide-react';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Search, Home as HomeIcon, Library, PlusCircle, Play, Pause, SkipBack, SkipForward, Volume, Volume1, Volume2, VolumeX, List, Heart, LogOut, MoreVertical, Plus, User, Compass, Trash2, Edit, Shuffle, Trash, Menu, Radio, GripVertical, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -894,12 +895,20 @@ export default function HomePage() {
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
-    const items = Array.from(queue);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-    setQueue(items);
-    if (user) {
-      updateUserData({ queue: items });
+
+    const sourceId = result.source.droppableId;
+    const destinationId = result.destination.droppableId;
+
+    if (sourceId.startsWith('playlist-')) {
+      handlePlaylistTrackReorder(sourceId.split('-')[1], result);
+    } else if (sourceId === 'queue') {
+      const items = Array.from(queue);
+      const [reorderedItem] = items.splice(result.source.index, 1);
+      items.splice(result.destination.index, 0, reorderedItem);
+      setQueue(items);
+      if (user) {
+        updateUserData({ queue: items });
+      }
     }
   };
 
@@ -1306,19 +1315,32 @@ export default function HomePage() {
           </div>
         </div>
         {selectedPlaylist.tracks.length > 0 ? (
-          <DragDropContext onDragEnd={(result) => handlePlaylistTrackReorder(selectedPlaylist.id, result)}>
+          <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId={`playlist-${selectedPlaylist.id}`}>
               {(provided) => (
                 <ul {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
                   {selectedPlaylist.tracks.map((track, index) => (
                     <Draggable key={index} draggableId={`${selectedPlaylist.id}-${index}`} index={index}>
-                      {(provided) => (
+                      {(provided, snapshot) => (
                         <li
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="bg-gray-800 p-3 rounded-lg flex items-center space-x-3 hover:bg-gray-700 transition-colors"
+                          className={`bg-gray-800 p-3 rounded-lg flex items-center space-x-3 hover:bg-gray-700 transition-colors ${
+                            snapshot.isDragging ? 'shadow-lg' : ''
+                          }`}
+                          style={{
+                            ...provided.draggableProps.style,
+                            transform: snapshot.isDragging
+                              ? `${provided.draggableProps.style.transform} rotate(3deg)`
+                              : provided.draggableProps.style.transform,
+                          }}
                         >
+                          <div 
+                            {...provided.dragHandleProps}
+                            className="flex-shrink-0 mr-2 text-gray-400 cursor-grab active:cursor-grabbing"
+                          >
+                            <GripVertical size={20} />
+                          </div>
                           <div className="flex-shrink-0 w-12 h-12 relative">
                             <Image
                               src={track.thumbnail}
@@ -2104,13 +2126,26 @@ export default function HomePage() {
                         <ul {...provided.droppableProps} ref={provided.innerRef}>
                           {queue.map((video, index) => (
                             <Draggable key={video.id} draggableId={video.id} index={index}>
-                              {(provided) => (
+                              {(provided, snapshot) => (
                                 <li
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  className="flex items-start justify-between mb-2 bg-gray-700 p-2 rounded"
+                                  className={`flex items-start justify-between mb-2 bg-gray-700 p-2 rounded ${
+                                    snapshot.isDragging ? 'shadow-lg' : ''
+                                  }`}
+                                  style={{
+                                    ...provided.draggableProps.style,
+                                    transform: snapshot.isDragging
+                                      ? `${provided.draggableProps.style.transform} rotate(3deg)`
+                                      : provided.draggableProps.style.transform,
+                                  }}
                                 >
+                                  <div 
+                                    {...provided.dragHandleProps}
+                                    className="flex-shrink-0 mr-2 text-gray-400 cursor-grab active:cursor-grabbing"
+                                  >
+                                    <GripVertical size={16} />
+                                  </div>
                                   <div className="flex items-start flex-grow mr-2">
                                     <Image
                                       src={video.thumbnail}

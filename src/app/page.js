@@ -52,6 +52,7 @@ import { cn } from "@/lib/utils"
 import { db } from '../firebase/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { Edit2 } from 'lucide-react';
 
 const YouTubePlayer = dynamic(() => import('../components/YouTubePlayer'), { ssr: false });
 const LdrsComponents = dynamic(() => import('../components/LdrsComponents'), { ssr: false });
@@ -130,7 +131,7 @@ export default function HomePage() {
   const [miniPlayerHeight, setMiniPlayerHeight] = useState(0);
   const [selectedGenre, setSelectedGenre] = useState(null);
   const [selectedMood, setSelectedMood] = useState(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileLibraryOpen, setIsMobileLibraryOpen] = useState(false);
   const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
   const [livePodcasts, setLivePodcasts] = useState([]);
   const [podcastGenres, setPodcastGenres] = useState([]);
@@ -143,6 +144,15 @@ export default function HomePage() {
 
   const [trendingMusic, setTrendingMusic] = useState([]);
   const [lastTrendingCacheTime, setLastTrendingCacheTime] = useState(0);
+
+  // Add these to your existing state declarations at the top of the component
+  const [showMobileLibrary, setShowMobileLibrary] = useState(false);
+  const [mobilePlaylistToEdit, setMobilePlaylistToEdit] = useState(null);
+
+  // Add this new function to handle mobile playlist edit
+  const handleMobilePlaylistEdit = (playlist) => {
+    setMobilePlaylistToEdit(playlist);
+  };
 
   // Add this new state to track if we should ignore the next click
   const [ignoreNextClick, setIgnoreNextClick] = useState(false);
@@ -196,10 +206,10 @@ export default function HomePage() {
         { name: 'Jazz', image: '/genre-images/jazz.png' }
       ];
       
-      // Fetch trending music
-      const trendingResponse = await axios.get(`/api/youtube-search?query=${encodeURIComponent('trending music')}`);
-      const trendingMusic = trendingResponse.data.items.slice(0, 20); // Get top 20 trending music videos
-      
+      // Fetch trending music (actual songs)
+      const trendingResponse = await axios.get(`/api/youtube-search?query=${encodeURIComponent('new music releases')}&type=video&videoCategoryId=10`);
+      const trendingMusic = trendingResponse.data.items.slice(0, 10); // Get top 10 trending music videos
+
       exploreCache = {
         popularGenres: genres,
         trendingMusic: trendingMusic
@@ -223,8 +233,8 @@ export default function HomePage() {
     try {
       const categories = ['News', 'Comedy', 'True Crime', 'Sports', 'Technology', 'Business'];
       const [popularResponse, liveResponse, categoriesResponse] = await Promise.all([
-        axios.get(`/api/youtube-search?query=${encodeURIComponent('popular podcasts')}`),
-        axios.get(`/api/youtube-search?query=${encodeURIComponent('live podcasts')}&type=video&eventType=live`),
+        axios.get(`/api/youtube-search?query=${encodeURIComponent('famous podcasts')}`),
+        axios.get(`/api/youtube-search?query=${encodeURIComponent('podcast')}&type=video&eventType=live`),
         axios.get(`/api/youtube-search?query=${encodeURIComponent(categories.join('|') + ' podcasts')}`)
       ]);
 
@@ -789,20 +799,6 @@ export default function HomePage() {
     };
 
     loadYouTubeAPI();
-  }, []);
-
-  useEffect(() => {
-    // Check for ad-blocker
-    const testAd = document.createElement('div');
-    testAd.innerHTML = '&nbsp;';
-    testAd.className = 'adsbox';
-    document.body.appendChild(testAd);
-    window.setTimeout(() => {
-      if (testAd.offsetHeight === 0) {
-        setShowAdBlockerWarning(true);
-      }
-      testAd.remove();
-    }, 100);
   }, []);
 
   const handleNavClick = (label) => {
@@ -1399,7 +1395,7 @@ export default function HomePage() {
         transition={{ duration: 0.3 }}
         className="mb-12"
       >
-        <h2 className="text-2xl font-bold text-white mb-6">Liked Tracks</h2>
+        <h1 className="text-3xl font-bold text-white mb-6">Liked Tracks</h1>
         {likedTracks.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {likedTracks.map((track, index) => renderVideoCard(track, index, false))}
@@ -1418,92 +1414,96 @@ export default function HomePage() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
         className="space-y-6 md:space-y-8"
-        onClick={handleContentClick} // Add this onClick handler
+        onClick={handleContentClick}
       >
         {/* Header with search bar and user info */}
-        <motion.header
-          initial={{ y: -50 }}
-          animate={{ y: 0 }}
-          transition={{ type: 'spring', stiffness: 120 }}
-          className="flex justify-between items-center mb-6 md:mb-12"
-        >
-          <div className="relative w-full md:w-1/2 lg:w-1/3">
-            <motion.div 
-              className={`
-                flex items-center 
-                bg-gradient-to-r from-gray-800 to-gray-700
-                rounded-full 
-                transition-all duration-300 ease-in-out
-                ${isSearchFocused ? 'ring-2 ring-blue-400 shadow-lg' : 'shadow-md'}
-                ${isSearchFocused ? 'pl-4 pr-3 py-2 md:pl-6 md:pr-4 md:py-4' : 'pl-3 pr-2 py-2 md:pl-4 md:pr-3 md:py-3'}
-              `}
-              animate={{ 
-                scale: isSearchFocused ? 1.02 : 1,
-                boxShadow: isSearchFocused ? '0 4px 6px rgba(0, 0, 0, 0.1)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
-              }}
-              whileHover={{ scale: 1.01 }}
-            >
-              <Search 
+        {currentView !== 'likedTracks' && (
+          <motion.header
+            initial={{ y: -50 }}
+            animate={{ y: 0 }}
+            transition={{ type: 'spring', stiffness: 120 }}
+            className="flex justify-between items-center mb-6 md:mb-12 gap-4"
+          >
+            <div className="flex-grow max-w-md">
+              <motion.div 
                 className={`
-                  text-gray-400 
-                  transition-all duration-300
-                  ${isSearchFocused ? 'text-blue-400 w-5 h-5 md:w-6 md:h-6 mr-2 md:mr-3' : 'w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2'}
+                  flex items-center 
+                  bg-gradient-to-r from-gray-800 to-gray-700
+                  rounded-full 
+                  transition-all duration-300 ease-in-out
+                  ${isSearchFocused ? 'ring-2 ring-blue-400 shadow-lg' : 'shadow-md'}
+                  ${isSearchFocused ? 'pl-4 pr-3 py-2 md:pl-6 md:pr-4 md:py-4' : 'pl-3 pr-2 py-2 md:pl-4 md:pr-3 md:py-3'}
                 `}
-              />
-              <input 
-                className="
-                  w-full bg-transparent text-white 
-                  border-none focus:outline-none focus:ring-0
-                  placeholder-gray-400 text-xs md:text-sm
-                "
-                placeholder={currentView === 'podcasts' ? "Search for podcasts" : "Search for YouTube videos"}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-              />
-            </motion.div>
-          </div>
-          
-          {/* User info and login/signup buttons */}
-          <div className="hidden md:flex items-center space-x-4">
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="text-white font-semibold hover:text-gray-300 transition-colors duration-200 flex items-center cursor-pointer">
-                    {user.displayName}
-                    <MoreVertical size={16} className="ml-2" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48 bg-gray-800 border border-gray-700">
-                  <DropdownMenuItem 
-                    className="flex items-center text-white hover:bg-gray-700 cursor-pointer"
-                    onSelect={() => {window.location.href = '/you';}}>
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="flex items-center text-white hover:bg-gray-700 cursor-pointer"
-                    onSelect={handleLogout}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <>
-                <Link href="/login" className="text-sm text-white hover:text-gray-300 transition-colors duration-200">
-                  Sign In
-                </Link>
-                <div className="h-4 w-px bg-white"></div>
-                <Link href="/signup" className="text-sm text-white hover:text-gray-300 transition-colors duration-200">
-                  Create an Account
-                </Link>
-              </>
-            )}
-          </div>
-        </motion.header>
+                animate={{ 
+                  scale: isSearchFocused ? 1.02 : 1,
+                  boxShadow: isSearchFocused ? '0 4px 6px rgba(0, 0, 0, 0.1)' : '0 1px 3px rgba(0, 0, 0, 0.1)'
+                }}
+                whileHover={{ scale: 1.01 }}
+              >
+                <Search 
+                  className={`
+                    text-gray-400 
+                    transition-all duration-300
+                    ${isSearchFocused ? 'text-blue-400 w-5 h-5 md:w-6 md:h-6 mr-2 md:mr-3' : 'w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2'}
+                  `}
+                />
+                <input 
+                  className="
+                    w-full bg-transparent text-white 
+                    border-none focus:outline-none focus:ring-0
+                    placeholder-gray-400 text-xs md:text-sm
+                  "
+                  placeholder={currentView === 'podcasts' ? "Search for podcasts" : "Search for YouTube videos"}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                />
+              </motion.div>
+            </div>
+            
+            {/* User info and login/signup buttons */}
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="text-white font-semibold hover:text-gray-300 transition-colors duration-200 flex items-center cursor-pointer text-xs sm:text-sm">
+                      {user.displayName}
+                      <MoreVertical size={16} className="ml-1 sm:ml-2" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-48 bg-gray-800 border border-gray-700">
+                    <DropdownMenuItem 
+                      className="flex items-center text-white hover:bg-gray-700 cursor-pointer"
+                      onSelect={() => {
+                        window.open('/you', '_blank');
+                      }}>
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="flex items-center text-white hover:bg-gray-700 cursor-pointer"
+                      onSelect={handleLogout}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <>
+                  <Link href="/login" className="text-xs sm:text-sm text-white hover:text-gray-300 transition-colors duration-200" target="_blank" rel="noopener noreferrer">
+                    Sign In
+                  </Link>
+                  <div className="h-4 w-px bg-white hidden sm:block"></div>
+                  <Link href="/signup" className="text-xs sm:text-sm text-white hover:text-gray-300 transition-colors duration-200" target="_blank" rel="noopener noreferrer">
+                    Create Account
+                  </Link>
+                </>
+              )}
+            </div>
+          </motion.header>
+        )}
 
         {/* Render appropriate content based on currentView */}
         {currentView === 'likedTracks' && renderLikedTracksView()}
@@ -1616,6 +1616,165 @@ export default function HomePage() {
             )}
           </>
         )}
+
+        {/* Mobile Bottom Navigation */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gray-900 z-30">
+          <div className="flex justify-around items-center p-2">
+            <button
+              onClick={() => handleNavClick('Explore')}
+              className={`flex flex-col items-center p-2 ${
+                selectedNavItem === 'Explore' ? 'text-white' : 'text-gray-400'
+              }`}
+            >
+              <Compass size={24} />
+              <span className="text-xs mt-1">Explore</span>
+            </button>
+            <button
+              onClick={() => handlePodcastNavClick()}
+              className={`flex flex-col items-center p-2 ${
+                selectedNavItem === 'Podcasts' ? 'text-white' : 'text-gray-400'
+              }`}
+            >
+              <Radio size={24} />
+              <span className="text-xs mt-1">Podcasts</span>
+            </button>
+            <button
+              onClick={() => handleNavClick('Liked Tracks')}
+              className={`flex flex-col items-center p-2 ${
+                selectedNavItem === 'Liked Tracks' ? 'text-white' : 'text-gray-400'
+              }`}
+            >
+              <Heart size={24} />
+              <span className="text-xs mt-1">Liked</span>
+            </button>
+            <button
+              onClick={() => setShowMobileLibrary(true)}
+              className={`flex flex-col items-center p-2 ${
+                isMobileLibraryOpen ? 'text-white' : 'text-gray-400'
+              }`}
+            >
+              <Library size={24} />
+              <span className="text-xs mt-1">Library</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Library AlertDialog */}
+        <AlertDialog open={showMobileLibrary} onOpenChange={setShowMobileLibrary}>
+          <AlertDialogContent className="bg-gray-900 border border-gray-800 text-white max-w-[95vw] p-4 max-h-[90vh] overflow-y-auto">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-lg font-bold">Your Library</AlertDialogTitle>
+              <AlertDialogDescription className="text-sm text-gray-400">
+                Manage your playlists
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="my-2">
+              <Button
+                onClick={() => {
+                  setShowMobileLibrary(false);
+                  setShowCreatePlaylistDialog(true);
+                }}
+                className="w-full mb-2 bg-blue-600 text-white hover:bg-blue-700 text-sm py-2"
+              >
+                <PlusCircle className="mr-2" size={14} />
+                Create New Playlist
+              </Button>
+              <ScrollArea className="h-[50vh]">
+                {playlists.map((playlist) => (
+                  <div key={playlist.id} className="flex items-center justify-between mb-2 p-2 bg-gray-800 rounded">
+                    <button
+                      className="flex-grow text-left text-white hover:text-gray-300 text-sm"
+                      onClick={() => {
+                        handlePlaylistClick(playlist);
+                        setShowMobileLibrary(false);
+                      }}
+                    >
+                      {playlist.name}
+                    </button>
+                    <button
+                      onClick={() => handleMobilePlaylistEdit(playlist)}
+                      className="ml-2 p-1 text-gray-400 hover:text-white"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </ScrollArea>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 text-sm py-2">
+                Close
+              </AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Mobile Playlist Edit AlertDialog */}
+        <AlertDialog open={!!mobilePlaylistToEdit} onOpenChange={() => setMobilePlaylistToEdit(null)}>
+          <AlertDialogContent className="bg-gray-900 border border-gray-800 text-white max-w-[95vw] p-4">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-lg font-bold">Edit Playlist</AlertDialogTitle>
+              <AlertDialogDescription className="text-sm text-gray-400">
+                Rename or delete the playlist
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="my-2 space-y-2">
+              <Button
+                onClick={() => {
+                  handleRenamePlaylist(mobilePlaylistToEdit);
+                  setMobilePlaylistToEdit(null);
+                }}
+                className="w-full bg-blue-600 text-white hover:bg-blue-700 text-sm py-2"
+              >
+                Rename Playlist
+              </Button>
+              <Button
+                onClick={() => {
+                  handleDeletePlaylist(mobilePlaylistToEdit.id);
+                  setMobilePlaylistToEdit(null);
+                }}
+                className="w-full bg-red-600 text-white hover:bg-red-700 text-sm py-2"
+              >
+                Delete Playlist
+              </Button>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 text-sm py-2">
+                Cancel
+              </AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AnimatePresence>
+          {isMobileLibraryOpen && (
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="fixed inset-x-0 bottom-14 h-[calc(100%-3.5rem)] bg-gray-900 p-6 z-40 md:hidden overflow-y-auto"
+            >
+              <button onClick={() => setIsMobileLibraryOpen(false)} className="absolute top-4 right-4 text-white">
+                <X size={24} />
+              </button>
+              <div className="mt-12">
+                <nav className="space-y-4">
+                  {renderNavItem('Explore', <Compass size={20} className="mr-2" />, 'Explore')}
+                  {renderNavItem('Podcasts', <Radio size={20} className="mr-2" />, 'Podcasts')}
+                  {renderNavItem('Liked Tracks', <Heart size={20} className="mr-2" />, 'Liked Tracks')}
+                  {user && (
+                    <>
+                      {renderNavItem('Playlists', <List size={20} className="mr-2" />, 'Playlists')}
+                      {renderNavItem('Albums', <Music size={20} className="mr-2" />, 'Albums')}
+                      {renderNavItem('Artists', <User size={20} className="mr-2" />, 'Artists')}
+                    </>
+                  )}
+                </nav>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     );
   };
@@ -1946,159 +2105,10 @@ export default function HomePage() {
               </div>
             </motion.aside>
 
-            {/* Mobile header */}
-            <div className="md:hidden fixed top-0 left-0 right-0 bg-gray-900 z-30">
-              <div className="flex justify-between items-center p-4">
-                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-white">
-                  <Menu size={24} />
-                </button>
-                <h1 className="text-xl font-bold">Streamora</h1>
-                <div className="flex items-center">
-                  {user ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="text-white font-semibold hover:text-gray-300 transition-colors duration-200 flex items-center cursor-pointer">
-                          <User size={20} />
-                          <MoreVertical size={16} className="ml-1" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-48 bg-gray-800 border border-gray-700">
-                        <DropdownMenuItem 
-                          className="flex items-center text-white hover:bg-gray-700 cursor-pointer"
-                          onSelect={() => {window.location.href = '/you';}}>
-                          <User className="mr-2 h-4 w-4" />
-                          Profile
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="flex items-center text-white hover:bg-gray-700 cursor-pointer"
-                          onSelect={handleLogout}
-                        >
-                          <LogOut className="mr-2 h-4 w-4" />
-                          Sign out
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : (
-                    <div className="flex items-center">
-                      <Link href="/login" className="text-sm text-white hover:text-gray-300 transition-colors duration-200 px-2 py-1">
-                        Sign In
-                      </Link>
-                      <div className="h-4 w-px bg-gray-600 mx-1"></div>
-                      <Link href="/signup" className="text-sm text-white hover:text-gray-300 transition-colors duration-200 px-2 py-1">
-                        Create an Account
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile menu */}
-            <AnimatePresence>
-              {isMobileMenuOpen && (
-                <motion.div
-                  initial={{ x: "-100%" }}
-                  animate={{ x: 0 }}
-                  exit={{ x: "-100%" }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="fixed inset-y-0 left-0 w-64 bg-gray-900 p-6 z-40 md:hidden"
-                >
-                  <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-4 right-4 text-white">
-                    <X size={24} />
-                  </button>
-                  <div className="mt-12">
-                    <nav className="space-y-4">
-                      <button
-                        className={`flex items-center w-full py-2 px-4 rounded-lg transition-colors duration-200 cursor-pointer ${
-                          selectedNavItem === 'Explore' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                        }`}
-                        onClick={() => {
-                          handleNavClick('Explore');
-                          setIsMobileMenuOpen(false);
-                        }}
-                      >
-                        <Compass className="mr-3" size={20} />
-                        <span className="font-medium">Explore</span>
-                      </button>
-                      
-                      <button
-                        className={`flex items-center w-full py-2 px-4 rounded-lg transition-colors duration-200 cursor-pointer ${
-                          selectedNavItem === 'Podcasts' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                        }`}
-                        onClick={() => {
-                          handlePodcastNavClick();
-                          setIsMobileMenuOpen(false);
-                        }}
-                      >
-                        <Radio className="mr-3" size={20} />
-                        <span className="font-medium">Podcasts</span>
-                      </button>
-                      <button
-                        className={`flex items-center w-full py-2 px-4 rounded-lg transition-colors duration-200 cursor-pointer ${
-                          selectedNavItem === 'Liked Tracks' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                        }`}
-                        onClick={() => {
-                          handleNavClick('Liked Tracks');
-                          setIsMobileMenuOpen(false);
-                        }}
-                      >
-                        <Heart className="mr-3" size={20} />
-                        <span className="font-medium">Liked Tracks</span>
-                      </button>
-                      
-                      <div>
-                        <button
-                          className={`flex items-center w-full py-2 px-4 rounded-lg transition-colors duration-200 cursor-pointer ${
-                            selectedNavItem.startsWith('playlist-') ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                          }`}
-                          onClick={() => setIsLibraryOpen(!isLibraryOpen)}
-                        >
-                          <Library className="mr-3" size={20} />
-                          <span className="font-medium">Your Library</span>
-                          <ChevronDown className={`ml-auto h-4 w-4 transform transition-transform ${isLibraryOpen ? 'rotate-180' : ''}`} />
-                        </button>
-                        
-                        {isLibraryOpen && (
-                          <div className="ml-6 space-y-2 mt-2">
-                            <button
-                              className="flex items-center w-full py-1 px-2 rounded-md text-gray-400 hover:bg-gray-800 hover:text-white transition-colors duration-200 cursor-pointer"
-                              onClick={() => {
-                                handleNavClick('Create Playlist');
-                                setIsMobileMenuOpen(false);
-                              }}
-                            >
-                              <PlusCircle className="mr-2" size={16} />
-                              <span className="text-sm">Create Playlist</span>
-                            </button>
-                            {playlists.map((playlist) => (
-                              <button
-                                key={playlist.id}
-                                className={`flex items-center w-full py-1 px-2 rounded-md transition-colors duration-200 cursor-pointer ${
-                                  selectedPlaylist && selectedPlaylist.id === playlist.id
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                                }`}
-                                onClick={() => {
-                                  handlePlaylistClick(playlist);
-                                  setIsMobileMenuOpen(false);
-                                }}
-                              >
-                                <span className="text-sm truncate">{playlist.name}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </nav>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             {/* Main content */}
             <main 
-              className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10 md:pt-8 pt-20"
-              style={{ paddingBottom: `${miniPlayerHeight + 20}px` }}
+              className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10 md:pt-8 pt-4 pb-20 md:pb-8"
+              style={{ paddingBottom: `${miniPlayerHeight + 60}px` }}
             >
               {renderMainContent()}
             </main>
@@ -2188,7 +2198,7 @@ export default function HomePage() {
                   animate={{ y: 0 }}
                   exit={{ y: 100 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                  className="fixed bottom-0 left-0 w-full bg-gray-900 p-2 sm:p-4 z-20"
+                  className="fixed bottom-14 md:bottom-0 left-0 w-full bg-gray-900 p-2 sm:p-4 z-20"
                   onLayoutMeasure={(measurement) => setMiniPlayerHeight(measurement.height)}
                 >
                   <div className="flex flex-col sm:flex-row items-center justify-between">
@@ -2394,16 +2404,16 @@ export default function HomePage() {
                     initial={{ scale: 0.9 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0.9 }}
-                    className="bg-gray-800 p-6 rounded-lg max-w-md mx-4"
+                    className="bg-gray-800 p-4 rounded-lg max-w-[95vw] mx-2"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <h2 className="text-2xl font-bold mb-4">You need an account for this.</h2>
-                    <p className="mb-6">This feature most likely stores data to a database, you will need an account to use it.</p>
-                    <div className="flex justify-end space-x-4">
-                      <Link href="/login" className="px-4 py-2 bg-white text-black rounded hover:bg-gray-300 transition-colors">
+                    <h2 className="text-lg font-bold mb-2">You need an account for this.</h2>
+                    <p className="mb-4 text-sm">This feature most likely stores data to a database, you will need an account to use it.</p>
+                    <div className="flex justify-end space-x-2">
+                      <Link href="/login" className="px-3 py-1 bg-white text-black rounded text-sm hover:bg-gray-300 transition-colors" target="_blank" rel="noopener noreferrer">
                         Sign In
                       </Link>
-                      <Link href="/signup" className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                      <Link href="/signup" className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 transition-colors" target="_blank" rel="noopener noreferrer">
                         Create an Account
                       </Link>
                     </div>
@@ -2414,10 +2424,10 @@ export default function HomePage() {
 
             {/* Create Playlist AlertDialog */}
             <AlertDialog open={showCreatePlaylistDialog} onOpenChange={setShowCreatePlaylistDialog}>
-              <AlertDialogContent className="bg-gray-900 border border-gray-800 text-white">
+              <AlertDialogContent className="bg-gray-900 border border-gray-800 text-white max-w-[95vw] p-4">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-xl font-bold">Create New Playlist</AlertDialogTitle>
-                  <AlertDialogDescription className="text-gray-400">
+                  <AlertDialogTitle className="text-lg font-bold">Create New Playlist</AlertDialogTitle>
+                  <AlertDialogDescription className="text-sm text-gray-400">
                     Enter a name for your new playlist (1-50 characters, alphanumeric and spaces only).
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -2427,13 +2437,13 @@ export default function HomePage() {
                   value={newPlaylistName}
                   onChange={(e) => setNewPlaylistName(e.target.value)}
                   maxLength={50}
-                  className="w-full p-2 mb-4 bg-gray-800 text-white border-gray-700 focus:border-gray-600 focus:ring-gray-600"
+                  className="w-full p-2 mb-2 bg-gray-800 text-white border-gray-700 focus:border-gray-600 focus:ring-gray-600 text-sm"
                 />
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-400">
+                  <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-400 text-sm py-2">
                     Cancel
                   </AlertDialogCancel>
-                  <AlertDialogAction onClick={handleConfirmCreatePlaylist} className="bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-400">
+                  <AlertDialogAction onClick={handleConfirmCreatePlaylist} className="bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 text-sm py-2">
                     Create
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -2442,10 +2452,10 @@ export default function HomePage() {
 
             {/* Rename Playlist AlertDialog */}
             <AlertDialog open={!!playlistToRename} onOpenChange={() => setPlaylistToRename(null)}>
-              <AlertDialogContent className="bg-gray-900 border border-gray-800 text-white">
+              <AlertDialogContent className="bg-gray-900 border border-gray-800 text-white max-w-[95vw] p-4">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-xl font-bold">Rename Playlist</AlertDialogTitle>
-                  <AlertDialogDescription className="text-gray-400">
+                  <AlertDialogTitle className="text-lg font-bold">Rename Playlist</AlertDialogTitle>
+                  <AlertDialogDescription className="text-sm text-gray-400">
                     Enter a new name for your playlist.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -2454,18 +2464,18 @@ export default function HomePage() {
                   placeholder="New playlist name"
                   value={newPlaylistName}
                   onChange={(e) => setNewPlaylistName(e.target.value)}
-                  className="w-full p-2 mb-4 bg-gray-800 text-white border-gray-700 focus:border-gray-600 focus:ring-gray-600"
+                  className="w-full p-2 mb-2 bg-gray-800 text-white border-gray-700 focus:border-gray-600 focus:ring-gray-600 text-sm"
                 />
                 <AlertDialogFooter>
                   <AlertDialogCancel 
                     onClick={() => setPlaylistToRename(null)}
-                    className="bg-gray-800 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-400"
+                    className="bg-gray-800 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-400 text-sm py-2"
                   >
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction 
                     onClick={confirmRenamePlaylist}
-                    className="bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-400"
+                    className="bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 text-sm py-2"
                   >
                     Rename
                   </AlertDialogAction>
@@ -2475,10 +2485,10 @@ export default function HomePage() {
 
             {/* Add to Playlist AlertDialog */}
             <AlertDialog open={showAddToPlaylistDialog} onOpenChange={setShowAddToPlaylistDialog}>
-              <AlertDialogContent className="bg-gray-900 border border-gray-800 text-white">
+              <AlertDialogContent className="bg-gray-900 border border-gray-800 text-white max-w-[95vw] p-4">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-xl font-bold">Add to Playlist</AlertDialogTitle>
-                  <AlertDialogDescription className="text-gray-400">
+                  <AlertDialogTitle className="text-lg font-bold">Add to Playlist</AlertDialogTitle>
+                  <AlertDialogDescription className="text-sm text-gray-400">
                     Choose a playlist to add the song to:
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -2488,18 +2498,18 @@ export default function HomePage() {
                       <Button
                         key={playlist.id}
                         onClick={() => handleAddToPlaylist(playlist.id)}
-                        className="w-full mb-2 justify-start bg-gray-800 text-white hover:bg-gray-700"
+                        className="w-full mb-2 justify-start bg-gray-800 text-white hover:bg-gray-700 text-sm py-2"
                         variant="ghost"
                       >
                         {playlist.name}
                       </Button>
                     ))
                   ) : (
-                    <p className="text-gray-400">You don't have any playlists yet. Create one first!</p>
+                    <p className="text-gray-400 text-sm">You don't have any playlists yet. Create one first!</p>
                   )}
                 </ScrollArea>
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-400">
+                  <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 text-sm py-2">
                     Cancel
                   </AlertDialogCancel>
                 </AlertDialogFooter>
@@ -2508,18 +2518,18 @@ export default function HomePage() {
 
             {/* Delete Playlist AlertDialog */}
             <AlertDialog open={showDeletePlaylistDialog} onOpenChange={setShowDeletePlaylistDialog}>
-              <AlertDialogContent className="bg-gray-900 border border-gray-800 text-white">
+              <AlertDialogContent className="bg-gray-900 border border-gray-800 text-white max-w-[95vw] p-4">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-xl font-bold">Delete Playlist</AlertDialogTitle>
-                  <AlertDialogDescription className="text-gray-400">
+                  <AlertDialogTitle className="text-lg font-bold">Delete Playlist</AlertDialogTitle>
+                  <AlertDialogDescription className="text-sm text-gray-400">
                     Are you sure you want to delete the playlist "{playlistToDelete?.name}"? This action cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-400">
+                  <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 text-sm py-2">
                     Cancel
                   </AlertDialogCancel>
-                  <AlertDialogAction onClick={confirmDeletePlaylist} className="bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-400">
+                  <AlertDialogAction onClick={confirmDeletePlaylist} className="bg-red-600 text-white hover:bg-red-700 text-sm py-2">
                     Delete
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -2527,20 +2537,20 @@ export default function HomePage() {
             </AlertDialog>
 
             <AlertDialog open={showLogoutAlert} onOpenChange={setShowLogoutAlert}>
-              <AlertDialogContent className="bg-gray-900 border border-gray-800 text-white">
+              <AlertDialogContent className="bg-gray-900 border border-gray-800 text-white max-w-[95vw] p-4">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-xl font-bold">Are you sure you want to sign out?</AlertDialogTitle>
-                  <AlertDialogDescription className="text-gray-400">
+                  <AlertDialogTitle className="text-lg font-bold">Are you sure you want to sign out?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-sm text-gray-400">
                     Your playlists and other data will remain saved in your account. You can log back in anytime to access them.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-400">
+                  <AlertDialogCancel className="bg-gray-800 text-white hover:bg-gray-700 text-sm py-2">
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction 
                     onClick={performLogout}
-                    className="bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-400"
+                    className="bg-red-600 text-white hover:bg-red-700 text-sm py-2"
                   >
                     Sign me out
                   </AlertDialogAction>
